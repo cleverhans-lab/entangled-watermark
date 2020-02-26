@@ -113,7 +113,6 @@ class RNNmodel:
         y = self.y
         w = self.w
         cond = tf.equal(y, self.target)
-        # cond = tf.logical_or(tf.equal(y, self.source), tf.equal(y, self.target))
         x = tf.boolean_mask(x, cond)
         w = tf.boolean_mask(w, cond)
 

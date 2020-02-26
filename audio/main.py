@@ -57,8 +57,7 @@ def choose_data(x_train, x_test, y_train, y_test, source, target, proportion):
     return watermark_x_train, watermark_x_test, w_label
 
 
-def train(epochs, lr, n_w_ratio, factors, temperatures, watermark_source, watermark_target, proportion, verbose,
-          batch_size, seed):
+def train(epochs, lr, n_w_ratio, factors, temperatures, watermark_source, watermark_target, proportion, batch_size, seed):
     np.random.seed(seed)
     tf.set_random_seed(seed)
 
@@ -66,8 +65,7 @@ def train(epochs, lr, n_w_ratio, factors, temperatures, watermark_source, waterm
     input_dim = 80
     num_class = 10
 
-    if verbose:
-        print("Preparing Dataset")
+    print("Preparing Dataset")
     x_train = np.reshape(np.load("../audio/sd_GSCmdV2/x_train.npy"), [-1, 125, 80])
     y_train = to_categorical(np.load("../audio/sd_GSCmdV2/y_train.npy"), num_class)
     x_test = np.reshape(np.load("../audio/sd_GSCmdV2/x_test.npy"), [-1, 125, 80])
@@ -102,8 +100,7 @@ def train(epochs, lr, n_w_ratio, factors, temperatures, watermark_source, waterm
     sess = tf.Session(config=config)
     sess.run(tf.global_variables_initializer())
 
-    if verbose:
-        print("Training starts")
+    print("Training starts")
 
     y_pred = []
     for e in range(epochs):
@@ -131,21 +128,6 @@ def train(epochs, lr, n_w_ratio, factors, temperatures, watermark_source, waterm
                     y_pred.append(np.argmax(sess.run(model.prediction, {x: x_train[-batch_size:]}), 1)
                                   [-x_train.shape[0] % batch_size:])
 
-        if verbose:
-            acc = []
-            for i in range(num_batchs_test):
-                audios = x_test[i * batch_size: (i + 1) * batch_size]
-                classes = y_test[i * batch_size: (i + 1) * batch_size]
-                pred = sess.run(model.prediction, {x: audios, y: classes})
-                acc.append(np.average(np.argmax(classes, 1) == np.argmax(pred, 1)))
-            w_acc = []
-            for i in range(num_batchs_test_watermark):
-                audios, _ = w_next_batch(watermark_x_test, None, i, batch_size)
-                pred = sess.run(model.prediction, {x: audios, y: watermark_y})
-                w_acc.append(np.average(watermark_target == np.argmax(pred, 1)))
-            print("Epoch {}, validation accuracy: {}, watermark success: {}".format(e, np.mean(acc),
-                                                                                    np.mean(w_acc)))
-
     acc = []
     for i in range(num_batchs_test):
         audios = x_test[i * batch_size: (i + 1) * batch_size]
@@ -163,8 +145,7 @@ def train(epochs, lr, n_w_ratio, factors, temperatures, watermark_source, waterm
 
     print("Victim Model || validation accuracy: {}, watermark success: {}".format(victim_acc, victim_watermark))
 
-    if verbose:
-        print("\nAttack starts\n")
+    print("Attack starts")
 
     y_pred = np.concatenate(y_pred)
 
@@ -181,25 +162,6 @@ def train(epochs, lr, n_w_ratio, factors, temperatures, watermark_source, waterm
             classes = y_pred[i * batch_size: (i + 1) * batch_size]
             sess.run(model.attack_optimize, {x: audios, y: to_categorical(classes, num_class)})
             upper.append(np.average(classes == np.argmax(true_label, 1)))
-        if verbose:
-            acc = []
-            baseline = []
-            for i in range(num_batchs_test):
-                audios = x_test[i * batch_size: (i + 1) * batch_size]
-                classes = y_test[i * batch_size: (i + 1) * batch_size]
-                pred = np.argmax(sess.run(model.attack_prediction, {x: audios, y: classes}), 1)
-                acc.append(np.average(np.argmax(classes, 1) == pred))
-                if np.sum(np.argmax(classes, 1) == watermark_source) != 0:
-                    baseline.append(np.sum((np.argmax(classes, 1) == watermark_source) & (pred == watermark_target))
-                                    / np.sum(classes == watermark_source))
-            w_acc = []
-            for i in range(num_batchs_test_watermark):
-                audios, _ = w_next_batch(watermark_x_test, None, i, batch_size)
-                pred = sess.run(model.attack_prediction, {x: audios, y: watermark_y})
-                w_acc.append(np.average(watermark_target == np.argmax(pred, 1)))
-            res[e] = [e, np.mean(upper), np.mean(acc), np.mean(w_acc), np.mean(baseline)]
-            print("Epoch {}, upper bound: {}, validation accuracy: {}, watermark success: {}, baseline: {}"
-                  .format(e, np.mean(upper), np.mean(acc), np.mean(w_acc), 1 - np.mean(baseline)))
 
     acc = []
     for i in range(num_batchs_test):
@@ -238,17 +200,14 @@ if __name__ == '__main__':
                         type=float, default=2.)
     parser.add_argument('--lr', help='learning rate', type=float, default=0.001)
     parser.add_argument('--epochs', help='number of epochs', type=int, default=40)
-    parser.add_argument('--proportion', help='', type=float, default=0.1)
+    parser.add_argument('--proportion', help='', type=float, default=0.5)
     parser.add_argument('--factors', nargs='+', type=int, default=[16, 16, 16])
     parser.add_argument('--temperatures', nargs='+',
                         help='a list of temperature for SNN loss of layers, 2 for MNIST, 3 for Fashion_Mnist',
-                        type=float, default=[128, 128, 128])
+                        type=float, default=[512, 512, 512])
     parser.add_argument('--watermark_source', help='origin of watermark, integer in 0-9', type=int, default=9)
     parser.add_argument('--watermark_target', help='target of watermark, integer in 0-9', type=int, default=5)
     parser.add_argument('--seed', help='random seed', type=int, default=0)
-    parser.add_argument('--save', type=int, default=0)
-    parser.add_argument('--verbose', help='whether to print loss during training', type=bool, default=False)
-    parser.add_argument('--id', type=str, default='')
 
     args = parser.parse_args()
     batch_size = args.batch_size
@@ -261,8 +220,5 @@ if __name__ == '__main__':
     watermark_source = args.watermark_source
     watermark_target = args.watermark_target
     seed = args.seed
-    verbose = args.verbose
-    save = args.save
 
-    train(epochs, lr, n_w_ratio, factors, temperatures, watermark_source, watermark_target, proportion, verbose,
-          batch_size, seed)
+    train(epochs, lr, n_w_ratio, factors, temperatures, watermark_source, watermark_target, proportion, batch_size, seed)

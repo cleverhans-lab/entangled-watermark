@@ -216,7 +216,6 @@ if __name__ == '__main__':
     watermark_target = args.watermark_target
     seed = args.seed
     verbose = args.verbose
-    save = args.save
 
     with open("{}.pkl".format(dataset), 'rb') as f:
         mnist = pickle.load(f)
