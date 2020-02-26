@@ -28,6 +28,7 @@ After preprocessing, a watermarked DNN model could be trained by the following l
 python main.py
 ```
 There are a number of arguments that could be used to set the hyperparameters. The interpretation and configuration of these hyperparameters are explained in our [paper](https://PLACEHOLDER).
+The `main.py` script also contains a model extraction attack to test the robustness of the watermarks. It is only for testing purpose and is not necessary for training the model.
 
 ### Questions or suggestions
 If you have any questions or suggestions, feel free to send me an email at nickhengrui.jia@mail.utoronto.ca
