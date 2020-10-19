@@ -135,8 +135,30 @@ def load_audio(data, dim):
     return np.vstack(output)
 
 
+def prepareOODtrigger(category='one'):
+    # note category could be set to 'zero' to 'nine' (string)
+    _DownloadGoogleSpeechCmdV2()
+    basePath = 'sd_GSCmdV2'
+
+    WAV2Numpy(basePath + '/test/')
+    WAV2Numpy(basePath + '/train/')
+
+    trainWAVs = []
+    for root, dirs, files in os.walk(basePath + '/train/'):
+        if np.array([root.endswith(category)]).any():
+            trainWAVs += [root + '/' + f for f in files if f.endswith('.wav.npy')]
+
+    # testWAVsREAL = []
+    # for root, dirs, files in os.walk(basePath + '/test/'):
+    #     if np.array([root.endswith('silence')]).any():
+    #         testWAVsREAL += [root + '/' + f for f in files if f.endswith('.wav.npy')]
+
+    return np.array(trainWAVs)
+
+
 if __name__ == '__main__':
     x_train, y_train, x_test, y_test = CustomPrepareGoogleSpeechCmd()
+    ood_source = None
 
     sr = 16000
     iLen = 16000
@@ -156,6 +178,12 @@ if __name__ == '__main__':
     np.save("sd_GSCmdV2/y_train.npy", y_train)
     np.save("sd_GSCmdV2/x_test.npy", x_test)
     np.save("sd_GSCmdV2/y_test.npy", y_test)
+
+    if ood_source is not None:
+        ood_trigger = prepareOODtrigger(ood_source)
+        trigger = melspecModel.predict(load_audio(ood_trigger, iLen).reshape((-1, 1, iLen)))
+        np.save("../image/data/sd_GSCmdV2/trigger.npy", trigger)
+
     print("Preprocessing finished")
 
 
