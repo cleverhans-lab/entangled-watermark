@@ -1,6 +1,6 @@
 # Entangled Watermarks as a Defense against Model Extraction
 
-This repository is an implementation of the paper [Entangled Watermarks as a Defense against Model Extraction](https://arxiv.org/abs/2002.12200). In this repository, we show how to train a watermarked DNN model that is robust against model extraction. The high-level idea is that a special watermark is designed such that it could be used to verify the owenrship of the model if it is stolen by model extraction. For more details, please read the paper.
+This repository is an implementation of the paper [Entangled Watermarks as a Defense against Model Extraction](https://PLACEHOLDER). In this repository, we show how to train a watermarked DNN model that is robust against model extraction. The high-level idea is that a special watermark is designed such that it could be used to verify the owenrship of the model if it is stolen by model extraction. For more details, please read the paper.
 
 We test our code on five datasets: MNIST, Fashion-MNIST, Google Speech Commands (10-classes), CIFAR-10, and CIFAR-100.
 
@@ -39,7 +39,7 @@ After preprocessing, a watermarked DNN model could be trained by the following l
 ```
 python train.py --dataset [mnist/fashion/speechcmd/cifar10/cifar100] --default 1
 ```
-There are a number of arguments that could be used to set the hyperparameters. The interpretation and configuration of these hyperparameters are explained in our [paper](https://arxiv.org/abs/2002.12200). Note that by setting the flag `--default 1`, pre-defined hyperparameters will be used.
+There are a number of arguments that could be used to set the hyperparameters. The interpretation and configuration of these hyperparameters are explained in our [paper](https://PLACEHOLDER). Note that by setting the flag `--default 1`, pre-defined hyperparameters will be used.
 The `train.py` script also contains a model extraction attack to test the robustness of the watermarks. It is only for testing purpose and is not necessary for training the model.
 
 ### Questions or suggestions
