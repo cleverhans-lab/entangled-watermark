@@ -1,12 +1,10 @@
 import tensorflow as tf
 import numpy as np
-import pandas as pd
 import argparse
 import os
 import pickle
 import functools
 import random
-import scipy.io as sio
 
 import models as md
 
@@ -66,6 +64,7 @@ def train(x_train, y_train, x_test, y_test, ewe_model, plain_model, epochs, w_ep
                 w_data = pickle.load(f)
             x_w, y_w = w_data["training_images"], w_data["training_labels"]
         elif "cifar" in dataset:
+            import scipy.io as sio
             w_dataset = sio.loadmat(os.path.join("data", "train_32x32"))
             x_w, y_w = np.moveaxis(w_dataset['X'], -1, 0), np.squeeze(w_dataset['y'] - 1)
         elif dataset == "speechcmd":
